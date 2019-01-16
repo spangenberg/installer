@@ -76,6 +76,9 @@ func provider(clusterID, clusterName string, platform *aws.Platform, mpool *aws.
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create awsprovider.TagSpecifications from UserTags")
 	}
+	rootDeviceName := "/dev/sda1"
+	rootDeviceSize := int64(mpool.EC2RootVolume.Size)
+	rootDeviceType := mpool.EC2RootVolume.Type
 	return &awsprovider.AWSMachineProviderConfig{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "awsproviderconfig.k8s.io/v1alpha1",
@@ -99,6 +102,17 @@ func provider(clusterID, clusterName string, platform *aws.Platform, mpool *aws.
 				Values: []string{fmt.Sprintf("%s_%s_sg", clusterName, role)},
 			}},
 		}},
+		BlockDevices: []awsprovider.BlockDeviceMappingSpec{
+			{
+				DeviceName: &rootDeviceName,
+				EBS: &awsprovider.EBSBlockDeviceSpec{
+					VolumeSize: &rootDeviceSize,
+					VolumeType: &rootDeviceType,
+				},
+				NoDevice:    nil,
+				VirtualName: nil,
+			},
+		},
 	}, nil
 }
 
